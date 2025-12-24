@@ -346,6 +346,19 @@ function insertIntoPrompt() {
 
 function htmlToMarkdown(html) {
   let text = html;
+
+  // 1. Strip span tags but keep content (often carries styles we don't want)
+  // Use a loop to handle nested spans if needed, but a global replace works for most flat cases.
+  // Repeatedly remove spans until gone? Or just simple replace.
+  // Simple replace: <span[^>]*>(.*?)</span> -> $1
+  // We might need to run it multiple times or use a better regex.
+  // Let's do a few passes for nested spans.
+  text = text.replace(/<span[^>]*>(.*?)<\/span>/gi, '$1');
+  text = text.replace(/<span[^>]*>(.*?)<\/span>/gi, '$1'); // run again for nesting
+
+  // 2. Remove specific style attributes from ANY tag (if any remain)
+  text = text.replace(/ style="[^"]*"/gi, '');
+
   text = text.replace(/<div[^>]*>/g, '\n').replace(/<\/div>/g, '');
   text = text.replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n');
   text = text.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n');
@@ -360,6 +373,8 @@ function htmlToMarkdown(html) {
   text = text.replace(/<\/li>/gi, '\n');
   text = text.replace(/&nbsp;/g, ' ');
   text = text.replace(/<br\s*\/?>/gi, '\n');
+
+  // Final cleanup of extra newlines
   const txt = document.createElement("textarea");
   txt.innerHTML = text;
   return txt.value.trim();
